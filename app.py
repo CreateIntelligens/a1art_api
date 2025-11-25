@@ -157,9 +157,9 @@ async def check_task_result(task_id: str, is_china: bool = False) -> Optional[Di
 @app.post("/create")
 async def create_process(
     file: UploadFile = File(...),
-    app_id: str = Form(default="1912088126456299522"), 
-    version_id: str = Form(default="1912088126460493825"),
-    cnet_form_id: str = Form(default="17447123252810005"),
+    app_id: str = Form(default="1920079111241039873"), 
+    version_id: str = Form(default="1920079111245234177"),
+    cnet_form_id: str = Form(default="17466175263110005"),
     generate_num: int = Form(default=1)
 ):
     """創建圖片生成任務"""
