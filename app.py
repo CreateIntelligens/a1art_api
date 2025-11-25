@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from dotenv import load_dotenv
 import os
 import json
@@ -77,6 +77,7 @@ async def generate_image(cnet_data, description_data, style_id, size_id, app_id,
     
     try:
         logger.info("Sending request to A1.art API")
+        logger.info(f"發送到 A1.art 的 payload: {json.dumps(payload, indent=2)}")
         async with aiohttp.ClientSession() as session:
             async with session.post(url, headers=headers, json=payload) as response:
                 result = await response.json()
@@ -156,17 +157,14 @@ async def check_task_result(task_id: str, is_china: bool = False) -> Optional[Di
 @app.post("/create")
 async def create_process(
     file: UploadFile = File(...),
-    app_id: str = "1912088126456299522", # 1911609567405113345
-    version_id: str = "1912088126460493825", # 1911609567413501954
-    cnet_form_id: str = "17447123252810005", # 17445982256630005
-    generate_num: int = 1
+    app_id: str = Form(default="1912088126456299522"), 
+    version_id: str = Form(default="1912088126460493825"),
+    cnet_form_id: str = Form(default="17447123252810005"),
+    generate_num: int = Form(default=1)
 ):
     """創建圖片生成任務"""
     try:
-        # 確保必要參數存在
-        if not all([app_id, version_id, cnet_form_id]):
-            raise HTTPException(status_code=400, detail="缺少必要參數")
-        
+        logger.info(f"接收到的參數: app_id={app_id}, version_id={version_id}, cnet_form_id={cnet_form_id}, generate_num={generate_num}")
         # 保存上傳的檔案
         os.makedirs("input", exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
