@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - API_KEY=${API_KEY}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=a1art
+      - POSTGRES_HOST=db
+    ports:
+      - "1989:1989"
+    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "1989", "--reload"]
+    restart: always
+
+volumes:
+  postgres_data:
