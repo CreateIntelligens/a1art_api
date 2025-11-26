@@ -11,7 +11,7 @@ from enum import Enum
 import threading
 from logging.handlers import RotatingFileHandler
 import asyncio
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import requests
@@ -52,6 +52,26 @@ class TaskState(Enum):
     PROCESSING = 30
 
 app = FastAPI()
+
+# 添加 CORS 中間件
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 允許所有來源
+    allow_credentials=True,
+    allow_methods=["*"],  # 允許所有方法
+    allow_headers=["*"],  # 允許所有標頭
+)
+
+# 創建 static 目錄
+os.makedirs('static', exist_ok=True)
+
+# 掛載靜態檔案
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/")
+async def root():
+    """提供前端頁面"""
+    return FileResponse("static/index.html")
 
 async def generate_image(cnet_data, description_data, style_id, size_id, app_id, version_id, generate_num):
     """生成圖片的主要函數"""
@@ -195,11 +215,30 @@ async def create_process(
             version_id=version_id,
             generate_num=generate_num
         )
-        print(generation_result)
-        task_id = generation_result['data'].get("taskId")
+
+        logger.info(f"API 回應: {json.dumps(generation_result, ensure_ascii=False, indent=2)}")
+
+        # 檢查回應結構
+        if not generation_result:
+            raise HTTPException(status_code=400, detail="API 回應為空")
+
+        if generation_result.get('code') != 0:
+            error_msg = generation_result.get('msg_cn') or generation_result.get('msg') or '未知錯誤'
+            logger.error(f"API 返回錯誤: {error_msg}")
+            raise HTTPException(status_code=400, detail=error_msg)
+
+        data = generation_result.get('data')
+        if not data:
+            logger.error(f"API 回應中沒有 data 字段: {generation_result}")
+            raise HTTPException(status_code=400, detail="API 回應格式錯誤：缺少 data 字段")
+
+        task_id = data.get("taskId")
         if not task_id:
+            logger.error(f"data 中沒有 taskId: {data}")
             raise HTTPException(status_code=400, detail="未獲取到任務ID")
-            
+
+        logger.info(f"成功創建任務，任務ID: {task_id}")
+
         return {
             "status": "success",
             "task_id": task_id,
@@ -221,6 +260,11 @@ async def get_process_status(task_id: str):
         
         if state == TaskState.COMPLETED.value:  # state == 10
             logger.info(f"TaskId: {task_id} 任務完成")
+            images = task_result.get("images", [])
+            logger.info(f"返回的圖片數量: {len(images)}")
+            if images:
+                logger.info(f"圖片數據結構: {json.dumps(images, ensure_ascii=False, indent=2)}")
+
             response = {
                 "status": "success",
                 "id": task_result.get("id"),
@@ -229,9 +273,8 @@ async def get_process_status(task_id: str):
                 "startDate": task_result.get("startDate"),
                 "finishDate": task_result.get("finishDate"),
                 "createDate": task_result.get("createDate"),
-                "images": task_result.get("images", [])
+                "images": images
             }
-            logger.info(f"{response}")
             # 任務完成時返回完整資訊
             return response
         else:  # state == 20 or state == 30
