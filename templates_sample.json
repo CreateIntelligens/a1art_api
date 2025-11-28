@@ -1,0 +1,36 @@
+{
+  "templates": [
+    {
+      "template_id": 0,
+      "name": "預設模板 0",
+      "app_id": "1920079111241039873",
+      "version_id": "1920079111245234177",
+      "cnet_form_id": "17466175263110005",
+      "template_image": "/static/template_images/your_template_image_0.jpg"
+    },
+    {
+      "template_id": 1,
+      "name": "預設模板 1",
+      "app_id": "1920079111241039873",
+      "version_id": "1920079111245234177",
+      "cnet_form_id": "17466175263110005",
+      "template_image": "/static/template_images/your_template_image_1.jpg"
+    },
+    {
+      "template_id": 2,
+      "name": "預設模板 2",
+      "app_id": "1920079111241039873",
+      "version_id": "1920079111245234177",
+      "cnet_form_id": "17466175263110005",
+      "template_image": "/static/template_images/your_template_image_2.jpg"
+    },
+    {
+      "template_id": 3,
+      "name": "預設模板 3",
+      "app_id": "1920079111241039873",
+      "version_id": "1920079111245234177",
+      "cnet_form_id": "17466175263110005",
+      "template_image": "/static/template_images/your_template_image_3.jpg"
+    }
+  ]
+}

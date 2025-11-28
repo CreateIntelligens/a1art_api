@@ -3,14 +3,20 @@ app_db.py
 app_old.py
 app_split2.py
 docker-compose-db.yaml
+templates.json
+.claude
 
 # input 資料夾保留，但內部檔案不上傳
 input/*
 !input/.gitkeep
 
-# logs 資料夾保留，但內部檔案不上傳  
+# logs 資料夾保留，但內部檔案不上傳
 logs/*
 !logs/.gitkeep
+
+# static/template_images 資料夾保留，但內部圖片不上傳
+static/template_images/*
+!static/template_images/.gitkeep
 
 # Python
 __pycache__/

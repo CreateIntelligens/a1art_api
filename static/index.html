@@ -295,6 +295,114 @@
             background: #fff8f0;
         }
 
+        /* ========== Tab 樣式 ========== */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .tab-button:hover {
+            color: #667eea;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 模板選擇樣式 */
+        .template-selector {
+            margin-bottom: 25px;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .template-card {
+            background: #f8f9ff;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .template-card-image {
+            width: 100%;
+            aspect-ratio: 3/4;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #f5f5f5;
+        }
+
+        .template-card:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+            transform: translateY(-2px);
+        }
+
+        .template-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .template-card-id {
+            font-size: 0.85em;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .template-card-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .template-loading {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+
         /* ========== 響應式設計 (RWD) ========== */
 
         /* 平板尺寸 (768px 以下) */
@@ -614,8 +722,57 @@
     <div class="container">
         <h1>🎨 AI 圖片生成器</h1>
 
-        <!-- 上傳區域 -->
-        <div class="upload-section">
+        <!-- Tab 導航 -->
+        <div class="tabs">
+            <button class="tab-button active" data-tab="template-tab">📦 模板選擇</button>
+            <button class="tab-button" data-tab="custom-tab">⚙️ 自訂參數</button>
+        </div>
+
+        <!-- Tab 1: 模板選擇模式 -->
+        <div id="template-tab" class="tab-content active">
+            <!-- 上傳區域 -->
+            <div class="upload-section">
+                <div class="upload-area" id="uploadAreaTemplate">
+                    <div class="upload-icon">📸</div>
+                    <div class="upload-text">點擊選擇圖片或拖曳圖片到此處</div>
+                    <div class="upload-text info-text">支援 JPG、PNG 格式</div>
+                </div>
+                <input type="file" id="fileInputTemplate" class="file-input" accept="image/*">
+                <img id="previewImageTemplate" class="preview-image" alt="預覽圖片">
+            </div>
+
+            <!-- 模板選擇區域 -->
+            <div class="template-selector">
+                <h3 style="color: #333; margin-bottom: 10px;">選擇風格模板</h3>
+                <div class="template-loading" id="templateLoading">載入模板中...</div>
+                <div class="template-grid" id="templateGrid"></div>
+            </div>
+
+            <!-- 生成按鈕 -->
+            <button class="generate-btn" id="generateBtnTemplate" disabled>
+                選擇圖片後開始生成
+            </button>
+
+            <!-- 錯誤訊息 -->
+            <div class="error-message" id="errorMessageTemplate"></div>
+
+            <!-- 成功訊息 -->
+            <div class="success-message" id="successMessageTemplate"></div>
+
+            <!-- 結果區域 -->
+            <div class="result-section" id="resultSectionTemplate">
+                <div class="loading" id="loadingAreaTemplate">
+                    <div class="spinner"></div>
+                    <div class="loading-text">正在生成圖片，請稍候...</div>
+                </div>
+                <div class="result-images" id="resultImagesTemplate"></div>
+            </div>
+        </div>
+
+        <!-- Tab 2: 自訂參數模式 -->
+        <div id="custom-tab" class="tab-content">
+            <!-- 上傳區域 -->
+            <div class="upload-section">
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">📸</div>
                 <div class="upload-text">點擊選擇圖片或拖曳圖片到此處</div>
@@ -1002,6 +1159,306 @@
         function hideSuccess() {
             successMessage.classList.remove('show');
         }
+
+        // ========== Tab 切換功能 ==========
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // 移除所有active class
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // 添加active class到點擊的button和對應的content
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // ========== 模板選擇模式功能 ==========
+        const uploadAreaTemplate = document.getElementById('uploadAreaTemplate');
+        const fileInputTemplate = document.getElementById('fileInputTemplate');
+        const previewImageTemplate = document.getElementById('previewImageTemplate');
+        const generateBtnTemplate = document.getElementById('generateBtnTemplate');
+        const templateGrid = document.getElementById('templateGrid');
+        const templateLoading = document.getElementById('templateLoading');
+        const errorMessageTemplate = document.getElementById('errorMessageTemplate');
+        const successMessageTemplate = document.getElementById('successMessageTemplate');
+        const resultSectionTemplate = document.getElementById('resultSectionTemplate');
+        const loadingAreaTemplate = document.getElementById('loadingAreaTemplate');
+        const resultImagesTemplate = document.getElementById('resultImagesTemplate');
+
+        let selectedFileTemplate = null;
+        let selectedTemplateId = 0;
+        let templates = [];
+
+        // 載入模板列表
+        async function loadTemplates() {
+            try {
+                const response = await fetch('/templates');
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    templates = data.templates;
+                    displayTemplates(templates);
+                    templateLoading.style.display = 'none';
+                } else {
+                    throw new Error('載入模板失敗');
+                }
+            } catch (error) {
+                console.error('Error loading templates:', error);
+                templateLoading.textContent = '❌ 載入模板失敗';
+            }
+        }
+
+        // 顯示模板列表
+        function displayTemplates(templateList) {
+            templateGrid.innerHTML = '';
+            templateList.forEach((template, index) => {
+                const card = document.createElement('div');
+                card.className = 'template-card';
+                if (index === 0) {
+                    card.classList.add('selected');
+                    selectedTemplateId = template.template_id;
+                }
+
+                card.innerHTML = `
+                    ${template.template_image ? `<img src="${template.template_image}" class="template-card-image" alt="${template.name}">` : ''}
+                    <div class="template-card-id">ID: ${template.template_id}</div>
+                    <div class="template-card-name">${template.name}</div>
+                `;
+
+                card.addEventListener('click', () => {
+                    // 移除所有selected class
+                    document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedTemplateId = template.template_id;
+                    console.log('選擇了模板:', template.name, '(ID:', template.template_id, ')');
+                });
+
+                templateGrid.appendChild(card);
+            });
+        }
+
+        // 頁面載入時載入模板
+        loadTemplates();
+
+        // 模板Tab - 點擊上傳區域
+        uploadAreaTemplate.addEventListener('click', () => {
+            fileInputTemplate.click();
+        });
+
+        // 模板Tab - 檔案選擇
+        fileInputTemplate.addEventListener('change', (e) => {
+            handleFileTemplate(e.target.files[0]);
+        });
+
+        // 模板Tab - 拖曳上傳
+        uploadAreaTemplate.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadAreaTemplate.classList.add('dragover');
+        });
+
+        uploadAreaTemplate.addEventListener('dragleave', () => {
+            uploadAreaTemplate.classList.remove('dragover');
+        });
+
+        uploadAreaTemplate.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadAreaTemplate.classList.remove('dragover');
+            handleFileTemplate(e.dataTransfer.files[0]);
+        });
+
+        // 模板Tab - 處理檔案
+        function handleFileTemplate(file) {
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showErrorTemplate('請選擇圖片檔案');
+                return;
+            }
+
+            selectedFileTemplate = file;
+
+            // 預覽圖片
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImageTemplate.src = e.target.result;
+                previewImageTemplate.classList.add('show');
+            };
+            reader.readAsDataURL(file);
+
+            // 啟用生成按鈕
+            generateBtnTemplate.disabled = false;
+            generateBtnTemplate.textContent = '🎨 開始生成圖片';
+
+            hideErrorTemplate();
+            hideSuccessTemplate();
+        }
+
+        // 模板Tab - 生成圖片
+        generateBtnTemplate.addEventListener('click', async () => {
+            if (!selectedFileTemplate) {
+                showErrorTemplate('請先選擇圖片');
+                return;
+            }
+
+            // 準備表單資料
+            const formData = new FormData();
+            formData.append('file', selectedFileTemplate);
+            formData.append('template_id', selectedTemplateId);
+
+            // 禁用按鈕
+            generateBtnTemplate.disabled = true;
+            generateBtnTemplate.textContent = '生成中...';
+
+            // 顯示載入區域
+            resultSectionTemplate.classList.add('show');
+            loadingAreaTemplate.style.display = 'block';
+            resultImagesTemplate.innerHTML = '';
+
+            hideErrorTemplate();
+            hideSuccessTemplate();
+
+            try {
+                // 呼叫 /generate API
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || '創建任務失敗');
+                }
+
+                const data = await response.json();
+                const taskId = data.task_id;
+                const templateName = data.template_name || '模板 ' + selectedTemplateId;
+
+                console.log('使用模板:', templateName, '創建任務:', taskId);
+
+                // 開始輪詢狀態
+                pollStatusTemplate(taskId);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showErrorTemplate(error.message);
+                generateBtnTemplate.disabled = false;
+                generateBtnTemplate.textContent = '🎨 開始生成圖片';
+                loadingAreaTemplate.style.display = 'none';
+            }
+        });
+
+        // 模板Tab - 輪詢任務狀態
+        async function pollStatusTemplate(taskId) {
+            const pollInterval = 2000;
+
+            const poll = async () => {
+                try {
+                    const response = await fetch(`/status/${taskId}`);
+
+                    if (!response.ok) {
+                        throw new Error('查詢狀態失敗');
+                    }
+
+                    const data = await response.json();
+
+                    if (data.state === 10) { // COMPLETED
+                        loadingAreaTemplate.style.display = 'none';
+                        displayResultsTemplate(data.images);
+                        showSuccessTemplate('圖片生成成功！');
+                        generateBtnTemplate.disabled = false;
+                        generateBtnTemplate.textContent = '🎨 重新生成圖片';
+                    } else if (data.state === 20) { // FAILED
+                        throw new Error('圖片生成失敗');
+                    } else if (data.state === 30) { // PROCESSING
+                        setTimeout(poll, pollInterval);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showErrorTemplate(error.message);
+                    loadingAreaTemplate.style.display = 'none';
+                    generateBtnTemplate.disabled = false;
+                    generateBtnTemplate.textContent = '🎨 重新生成圖片';
+                }
+            };
+
+            poll();
+        }
+
+        // 模板Tab - 顯示結果圖片
+        function displayResultsTemplate(images) {
+            if (!images || images.length === 0) {
+                showErrorTemplate('未獲取到生成的圖片');
+                return;
+            }
+
+            console.log('收到的圖片數據:', images);
+            resultImagesTemplate.innerHTML = '';
+
+            images.forEach((image, index) => {
+                let imageUrl;
+                if (typeof image === 'string') {
+                    imageUrl = image;
+                } else if (typeof image === 'object') {
+                    imageUrl = image.url || image.imageUrl || image.image_url || image.src;
+                }
+
+                if (!imageUrl) {
+                    console.error('圖片數據中找不到 URL:', image);
+                    showErrorTemplate(`第 ${index + 1} 張圖片缺少 URL`);
+                    return;
+                }
+
+                console.log(`圖片 ${index + 1} URL:`, imageUrl);
+
+                const container = document.createElement('div');
+                container.className = 'result-image-container';
+
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.className = 'result-image';
+                img.alt = `生成的圖片 ${index + 1}`;
+
+                img.onerror = () => {
+                    console.error('圖片載入失敗:', imageUrl);
+                    showErrorTemplate(`圖片 ${index + 1} 載入失敗`);
+                };
+
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'download-btn';
+                downloadBtn.textContent = '⬇ 下載';
+                downloadBtn.onclick = () => downloadImage(imageUrl, `generated_${index + 1}.jpg`);
+
+                container.appendChild(img);
+                container.appendChild(downloadBtn);
+                resultImagesTemplate.appendChild(container);
+            });
+        }
+
+        // 模板Tab - 顯示/隱藏訊息
+        function showErrorTemplate(message) {
+            errorMessageTemplate.textContent = '❌ ' + message;
+            errorMessageTemplate.classList.add('show');
+        }
+
+        function hideErrorTemplate() {
+            errorMessageTemplate.classList.remove('show');
+        }
+
+        function showSuccessTemplate(message) {
+            successMessageTemplate.textContent = '✅ ' + message;
+            successMessageTemplate.classList.add('show');
+        }
+
+        function hideSuccessTemplate() {
+            successMessageTemplate.classList.remove('show');
+        }
     </script>
+</div> <!-- 關閉 custom-tab -->
+</div> <!-- 關閉 container -->
 </body>
 </html>
