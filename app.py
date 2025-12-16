@@ -15,6 +15,8 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import requests
+import cv2
+import numpy as np
 
 # 創建logs目錄
 os.makedirs('logs', exist_ok=True)
@@ -207,6 +209,98 @@ async def save_uploaded_file(upload_file: UploadFile, destination: str) -> str:
         logger.error(f"保存檔案失敗: {e}")
         raise HTTPException(status_code=500, detail=f"檔案保存失敗: {str(e)}")
 
+def resize_image(input_path: str, max_size_mb: float = 2.0, quality: int = 85) -> str:
+    """使用 OpenCV 壓縮圖片到指定大小限制（不會自動旋轉）
+    
+    Args:
+        input_path: 原始圖片路徑
+        max_size_mb: 最大檔案大小(MB)
+        quality: 圖片品質(1-100)
+    
+    Returns:
+        壓縮後的圖片路徑
+    """
+    try:
+        # 生成壓縮後的檔案名
+        base_name = os.path.splitext(input_path)[0]
+        extension = os.path.splitext(input_path)[1]
+        output_path = f"{base_name}-resized{extension}"
+        
+        # 使用 OpenCV 讀取圖片（不會處理 EXIF 旋轉）
+        # cv2.IMREAD_IGNORE_ORIENTATION 確保忽略 EXIF 方向
+        img = cv2.imread(input_path, cv2.IMREAD_COLOR)
+        
+        if img is None:
+            logger.error(f"無法讀取圖片: {input_path}")
+            return input_path
+        
+        height, width = img.shape[:2]
+        logger.info(f"已載入圖片，尺寸: {width}x{height}，使用 OpenCV（不處理 EXIF）")
+        
+        # 獲取原始檔案大小
+        original_size = os.path.getsize(input_path) / (1024 * 1024)  # MB
+        logger.info(f"原始圖片大小: {original_size:.2f} MB")
+        
+        # 如果原始檔案已經小於限制，直接複製
+        if original_size <= max_size_mb:
+            logger.info(f"圖片大小符合要求，直接使用原圖")
+            shutil.copy2(input_path, output_path)
+            return output_path
+        
+        # 計算需要縮放的比例
+        scale_factor = (max_size_mb / original_size) ** 0.5  # 使用平方根來估算
+        new_width = int(width * scale_factor)
+        new_height = int(height * scale_factor)
+        
+        logger.info(f"壓縮圖片: {width}x{height} -> {new_width}x{new_height}")
+        
+        # 調整圖片大小（使用 INTER_LANCZOS4 高品質插值）
+        img_resized = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_LANCZOS4)
+        
+        # 嘗試不同的品質設定來達到目標大小
+        current_quality = quality
+        while current_quality >= 60:
+            # OpenCV 的 JPEG 品質參數
+            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), current_quality]
+            success, encoded_img = cv2.imencode('.jpg', img_resized, encode_param)
+            
+            if success:
+                with open(output_path, 'wb') as f:
+                    f.write(encoded_img.tobytes())
+                
+                output_size = os.path.getsize(output_path) / (1024 * 1024)
+                logger.info(f"品質 {current_quality}: 檔案大小 {output_size:.2f} MB")
+                
+                if output_size <= max_size_mb:
+                    logger.info(f"圖片壓縮成功: {original_size:.2f} MB -> {output_size:.2f} MB")
+                    return output_path
+            
+            current_quality -= 5
+        
+        # 如果還是太大，進一步縮小尺寸
+        while output_size > max_size_mb and new_width > 500:
+            new_width = int(new_width * 0.9)
+            new_height = int(new_height * 0.9)
+            img_resized = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_LANCZOS4)
+            
+            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 75]
+            success, encoded_img = cv2.imencode('.jpg', img_resized, encode_param)
+            
+            if success:
+                with open(output_path, 'wb') as f:
+                    f.write(encoded_img.tobytes())
+                
+                output_size = os.path.getsize(output_path) / (1024 * 1024)
+                logger.info(f"進一步縮小: {new_width}x{new_height}, 大小: {output_size:.2f} MB")
+        
+        logger.info(f"最終壓縮結果: {original_size:.2f} MB -> {output_size:.2f} MB")
+        return output_path
+        
+    except Exception as e:
+        logger.error(f"壓縮圖片失敗: {e}")
+        # 如果壓縮失敗，返回原始路徑
+        return input_path
+
 async def check_task_result(task_id: str, is_china: bool = False) -> Optional[Dict]:
     """查詢任務執行結果"""
     url = f"https://a1.art/open-api/v1/a1/tasks/{task_id}"
@@ -274,10 +368,14 @@ async def create_process(
         file_path = os.path.join("input", new_filename)
         
         await save_uploaded_file(file, file_path)
-        logger.info(f"檔案已保存到: {file_path}")
+        logger.info(f"原始檔案已保存到: {file_path}")
         
-        # 上傳圖片
-        upload_result = await upload_image(file_path)
+        # 壓縮圖片
+        resized_path = resize_image(file_path, max_size_mb=10.0)
+        logger.info(f"壓縮後檔案: {resized_path}")
+        
+        # 上傳壓縮後的圖片
+        upload_result = await upload_image(resized_path)
         
         # 構建cnet參數
         cnet = [{
@@ -388,10 +486,14 @@ async def generate_with_template(
         file_path = os.path.join("input", new_filename)
 
         await save_uploaded_file(file, file_path)
-        logger.info(f"檔案已保存到: {file_path}")
+        logger.info(f"原始檔案已保存到: {file_path}")
 
-        # 上傳圖片
-        upload_result = await upload_image(file_path)
+        # 壓縮圖片
+        resized_path = resize_image(file_path, max_size_mb=10.0)
+        logger.info(f"壓縮後檔案: {resized_path}")
+
+        # 上傳壓縮後的圖片
+        upload_result = await upload_image(resized_path)
 
         # 構建cnet參數
         cnet = [{
