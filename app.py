@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 import requests
 import cv2
 import numpy as np
+from pathlib import Path
 
 # 創建logs目錄
 os.makedirs('logs', exist_ok=True)
@@ -300,6 +301,43 @@ def resize_image(input_path: str, max_size_mb: float = 2.0, quality: int = 85) -
         logger.error(f"壓縮圖片失敗: {e}")
         # 如果壓縮失敗，返回原始路徑
         return input_path
+
+async def download_and_save_images(images: List, task_id: str):
+    """從 URL 下載圖片並儲存到 output 資料夾。"""
+    output_dir = Path("output")
+    output_dir.mkdir(exist_ok=True)  # 確保目錄存在
+
+    async with aiohttp.ClientSession() as session:
+        for i, image_item in enumerate(images):
+            image_url = None
+            if isinstance(image_item, str):
+                image_url = image_item
+            elif isinstance(image_item, dict):
+                image_url = image_item.get("url")
+
+            if not image_url:
+                logger.warning(f"任務 {task_id} 的第 {i} 項圖片資料格式不正確或缺少 URL: {image_item}")
+                continue
+
+            try:
+                # 從 URL 獲取副檔名，如果沒有則預設為 .jpg
+                file_extension = Path(image_url.split("?")[0]).suffix
+                if not file_extension:
+                    file_extension = ".jpg"
+                
+                filename = f"{task_id}_{i+1}{file_extension}"
+                filepath = output_dir / filename
+
+                async with session.get(image_url) as response:
+                    if response.status == 200:
+                        content = await response.read()
+                        with open(filepath, "wb") as f:
+                            f.write(content)
+                        logger.info(f"成功儲存圖片: {filepath}")
+                    else:
+                        logger.error(f"下載圖片失敗: {image_url}, 狀態碼: {response.status}")
+            except Exception as e:
+                logger.error(f"儲存圖片時發生錯誤: {image_url}, 錯誤: {e}")
 
 async def check_task_result(task_id: str, is_china: bool = False) -> Optional[Dict]:
     """查詢任務執行結果"""
@@ -646,6 +684,8 @@ async def get_process_status(task_id: str):
             logger.info(f"返回的圖片數量: {len(images)}")
             if images:
                 logger.info(f"圖片數據結構: {json.dumps(images, ensure_ascii=False, indent=2)}")
+                # 在背景中下載並儲存圖片
+                asyncio.create_task(download_and_save_images(images, task_id))
 
             response = {
                 "status": "success",

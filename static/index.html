@@ -4,7 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 圖片生成器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover-color: #0056b3;
+            --background-color: #f8f9fa;
+            --container-bg-color: #ffffff;
+            --text-color: #343a40;
+            --text-light-color: #6c757d;
+            --border-color: #dee2e6;
+            --border-radius: 12px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,325 +27,62 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 20px;
-            overflow-x: hidden; /* 防止橫向滾動 */
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
         }
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
+        .main-container {
+            max-width: 900px;
             width: 100%;
-            padding: 40px;
         }
 
-        h1 {
-            color: #333;
-            margin-bottom: 30px;
+        header {
             text-align: center;
-            font-size: 2em;
-        }
-
-        .upload-section {
             margin-bottom: 30px;
         }
 
-        .upload-area {
-            border: 3px dashed #667eea;
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #f8f9ff;
+        header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
         }
 
-        .upload-area:hover {
-            border-color: #764ba2;
-            background: #f0f2ff;
-        }
-
-        .upload-area.dragover {
-            border-color: #764ba2;
-            background: #e8ebff;
-        }
-
-        .upload-icon {
-            font-size: 3em;
-            margin-bottom: 15px;
-            color: #667eea;
-        }
-
-        .upload-text {
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .preview-image {
-            max-width: 100%;
-            max-height: 300px;
-            margin: 20px auto;
-            border-radius: 10px;
-            display: none;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .preview-image.show {
-            display: block;
-        }
-
-        .params-section {
-            margin-bottom: 30px;
-        }
-
-        .params-toggle {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-
-        .params-toggle:hover {
-            background: #764ba2;
-        }
-
-        .params-inputs {
-            display: none;
-            margin-top: 20px;
-            padding: 20px;
-            background: #f8f9ff;
-            border-radius: 10px;
-        }
-
-        .params-inputs.show {
-            display: block;
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.3s ease;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .generate-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 10px;
+        header p {
             font-size: 1.1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            font-weight: 600;
+            color: var(--text-light-color);
         }
 
-        .generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .generate-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .result-section {
-            margin-top: 30px;
-            display: none;
-        }
-
-        .result-section.show {
-            display: block;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: #666;
-            font-size: 1.1em;
-        }
-
-        .result-images {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-            justify-items: center;
-        }
-
-        .result-image-container {
-            position: relative;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .result-image {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .download-btn {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(102, 126, 234, 0.9);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.3s ease;
-        }
-
-        .download-btn:hover {
-            background: rgba(118, 75, 162, 0.9);
-        }
-
-        .error-message {
-            background: #ff4444;
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        .success-message {
-            background: #4CAF50;
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .success-message.show {
-            display: block;
-        }
-
-        .info-text {
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 5px;
-        }
-
-        .warning-message {
-            background: #ff9800;
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 15px;
-            display: none;
-            font-size: 0.9em;
-        }
-
-        .warning-message.show {
-            display: block;
-        }
-
-        .input-group input.invalid {
-            border-color: #ff9800;
-            background: #fff8f0;
-        }
-
-        /* ========== Tab 樣式 ========== */
         .tabs {
             display: flex;
-            gap: 10px;
+            background-color: var(--container-bg-color);
+            border-radius: var(--border-radius);
+            padding: 8px;
             margin-bottom: 25px;
-            border-bottom: 2px solid #e0e0e0;
+            box-shadow: var(--shadow);
         }
 
         .tab-button {
-            background: none;
+            flex: 1;
+            padding: 12px 20px;
             border: none;
-            padding: 12px 24px;
+            background: none;
             font-size: 1em;
-            cursor: pointer;
-            color: #666;
-            transition: all 0.3s ease;
-            position: relative;
             font-weight: 500;
-        }
-
-        .tab-button:hover {
-            color: #667eea;
+            color: var(--text-light-color);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
 
         .tab-button.active {
-            color: #667eea;
-        }
-
-        .tab-button.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #667eea;
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 10px rgba(0, 123, 255, 0.3);
         }
 
         .tab-content {
@@ -341,1124 +93,692 @@
             display: block;
         }
 
-        /* 模板選擇樣式 */
-        .template-selector {
+        .card {
+            background-color: var(--container-bg-color);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
             margin-bottom: 25px;
+        }
+
+        .card h3 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #fdfdff;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary-color);
+            background-color: #f0f6ff;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        
+        .upload-info {
+            font-size: 0.9em;
+            color: var(--text-light-color);
+            margin-top: 8px;
+        }
+
+        .file-input { display: none; }
+
+        .image-preview-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .template-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-top: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
         }
 
         .template-card {
-            background: #f8f9ff;
-            border: 2px solid #ddd;
-            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
             padding: 15px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
-            overflow: hidden;
         }
-
+        
         .template-card-image {
             width: 100%;
             aspect-ratio: 3/4;
-            object-fit: contain;
+            object-fit: cover;
             border-radius: 8px;
             margin-bottom: 10px;
-            background: #f5f5f5;
+            background-color: var(--background-color);
         }
 
         .template-card:hover {
-            border-color: #667eea;
-            background: #f0f2ff;
-            transform: translateY(-2px);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
         .template-card.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
         }
-
-        .template-card-id {
-            font-size: 0.85em;
-            color: #999;
-            margin-bottom: 5px;
-        }
-
+        
         .template-card-name {
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #333;
+            font-weight: 500;
+            font-size: 1em;
         }
-
+        
         .template-loading {
             text-align: center;
-            padding: 30px;
-            color: #666;
+            padding: 40px;
+            color: var(--text-light-color);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
         }
 
-        /* ========== 響應式設計 (RWD) ========== */
+        .input-group .info-text {
+            font-size: 0.85em;
+            color: var(--text-light-color);
+            margin-top: 5px;
+        }
 
-        /* 平板尺寸 (768px 以下) */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn:disabled {
+            background-color: #ced4da;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d; /* A neutral grey for secondary actions */
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        /* Container for advanced parameters, initially hidden */
+        .custom-params-inputs-container {
+            display: none;
+            margin-top: 20px; /* Spacing below the toggle button */
+            padding-top: 20px; /* Padding for separation */
+            border-top: 1px solid var(--border-color); /* Separator line */
+        }
+
+        .result-section { margin-top: 30px; }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .result-image-container {
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .result-image {
+            width: 100%;
+            display: block;
+        }
+
+        .download-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 123, 255, 0.8);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .result-image-container:hover .download-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        .message.show { display: block; }
+        .error-message { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .success-message { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-                align-items: flex-start;
-                padding-top: 15px;
-                padding-bottom: 15px;
-            }
-
-            .container {
-                padding: 20px;
-                border-radius: 15px;
-            }
-
-            h1 {
-                font-size: 1.6em;
-                margin-bottom: 15px;
-            }
-
-            .upload-section {
-                margin-bottom: 20px;
-            }
-
-            .params-section {
-                margin-bottom: 20px;
-            }
-
-            .upload-area {
-                padding: 30px 20px;
-            }
-
-            .upload-icon {
-                font-size: 2.5em;
-            }
-
-            .upload-text {
-                font-size: 0.95em;
-            }
-
-            .preview-image {
-                max-height: 250px;
-                margin: 12px auto;
-            }
-
-            .params-toggle {
-                padding: 10px 20px;
-                font-size: 0.95em;
-            }
-
-            .params-inputs {
-                padding: 15px;
-                margin-top: 15px;
-            }
-
-            .generate-btn {
-                margin-top: 20px;
-            }
-
-            .result-section {
-                margin-top: 20px;
-            }
-
-            .input-group label {
-                font-size: 0.95em;
-            }
-
-            .input-group input {
-                padding: 8px;
-                font-size: 0.95em;
-            }
-
-            .generate-btn {
-                padding: 12px 30px;
-                font-size: 1em;
-            }
-
-            .result-images {
-                grid-template-columns: 1fr;
-                gap: 15px;
-                margin-top: 15px;
-            }
-
-            .loading {
-                padding: 25px 20px;
-            }
-
-            .spinner {
-                width: 40px;
-                height: 40px;
-            }
-
-            .loading-text {
-                font-size: 1em;
-            }
-
-            .download-btn {
-                padding: 6px 12px;
-                font-size: 0.85em;
-            }
+            body { padding: 20px 10px; }
+            header h1 { font-size: 2em; }
+            .card { padding: 20px; }
+            .template-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
         }
 
-        /* 手機尺寸 (480px 以下) */
         @media (max-width: 480px) {
-            body {
-                padding: 5px;
-                padding-top: 10px;
-                padding-bottom: 10px;
-            }
-
-            .container {
-                padding: 15px;
-                border-radius: 10px;
-            }
-
-            h1 {
-                font-size: 1.4em;
-                margin-bottom: 12px;
-            }
-
-            .upload-section {
-                margin-bottom: 15px;
-            }
-
-            .params-section {
-                margin-bottom: 15px;
-            }
-
-            .upload-area {
-                padding: 20px 15px;
-            }
-
-            .upload-icon {
-                font-size: 2em;
-                margin-bottom: 8px;
-            }
-
-            .upload-text {
-                font-size: 0.9em;
-                margin-bottom: 6px;
-            }
-
-            .preview-image {
-                max-height: 200px;
-                margin: 12px auto;
-            }
-
-            .params-toggle {
-                padding: 10px 15px;
-                font-size: 0.9em;
-            }
-
-            .params-inputs {
-                padding: 12px;
-                margin-top: 12px;
-            }
-
-            .input-group {
-                margin-bottom: 10px;
-            }
-
-            .input-group label {
-                font-size: 0.9em;
-                margin-bottom: 4px;
-            }
-
-            .input-group input {
-                padding: 8px;
-                font-size: 0.9em;
-            }
-
-            .info-text {
-                font-size: 0.85em;
-                margin-top: 3px;
-            }
-
-            .generate-btn {
-                padding: 12px 20px;
-                font-size: 0.95em;
-                margin-top: 15px;
-            }
-
-            .result-images {
-                grid-template-columns: 1fr;
-                gap: 12px;
-                margin-top: 12px;
-            }
-
-            .result-image-container {
-                max-width: 100%;
-            }
-
-            .loading {
-                padding: 20px 15px;
-            }
-
-            .result-section {
-                margin-top: 15px;
-            }
-
-            .spinner {
-                width: 35px;
-                height: 35px;
-            }
-
-            .loading-text {
-                font-size: 0.95em;
-            }
-
-            .download-btn {
-                bottom: 8px;
-                right: 8px;
-                padding: 5px 10px;
-                font-size: 0.8em;
-            }
-
-            .error-message,
-            .success-message,
-            .warning-message {
-                padding: 10px;
-                font-size: 0.85em;
-                margin-top: 12px;
-            }
-        }
-
-        /* 超小螢幕 (360px 以下) */
-        @media (max-width: 360px) {
-            body {
-                padding: 5px;
-                padding-top: 8px;
-                padding-bottom: 8px;
-            }
-
-            .container {
-                padding: 12px;
-            }
-
-            h1 {
-                font-size: 1.3em;
-                margin-bottom: 10px;
-            }
-
-            .upload-section {
-                margin-bottom: 12px;
-            }
-
-            .params-section {
-                margin-bottom: 12px;
-            }
-
-            .upload-area {
-                padding: 18px 10px;
-            }
-
-            .upload-icon {
-                font-size: 1.8em;
-                margin-bottom: 6px;
-            }
-
-            .preview-image {
-                max-height: 180px;
-                margin: 10px auto;
-            }
-
-            .params-toggle,
-            .generate-btn {
-                font-size: 0.85em;
-                padding: 10px 15px;
-            }
-
-            .input-group {
-                margin-bottom: 8px;
-            }
-
-            .input-group input {
-                font-size: 0.85em;
-            }
-
-            .params-inputs {
-                padding: 10px;
-                margin-top: 10px;
-            }
-        }
-
-        /* 大螢幕優化 (1200px 以上) */
-        @media (min-width: 1200px) {
-            .container {
-                max-width: 900px;
-            }
-
-            .result-images {
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            }
-        }
-
-        /* 觸控設備優化 */
-        @media (hover: none) and (pointer: coarse) {
-            .upload-area {
-                padding: 35px 20px;
-            }
-
-            .params-toggle,
-            .generate-btn,
-            .download-btn {
-                min-height: 44px; /* iOS 建議的最小觸控區域 */
-            }
-
-            .input-group input {
-                min-height: 44px;
-                font-size: 16px; /* 防止 iOS Safari 自動縮放 */
-            }
+            body { padding: 15px 5px; }
+            .tabs { flex-direction: column; }
+            .tab-button { flex: none; }
+            .template-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+            .result-images { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎨 AI 圖片生成器</h1>
 
-        <!-- Tab 導航 -->
+    <div class="main-container">
+        <header>
+            <h1>AI 藝術生成器</h1>
+            <p>上傳一張圖片，選擇您喜愛的風格，創造獨一無二的藝術作品</p>
+        </header>
+
         <div class="tabs">
-            <button class="tab-button active" data-tab="template-tab">📦 模板選擇</button>
+            <button class="tab-button active" data-tab="template-tab">🎨 風格模板</button>
             <button class="tab-button" data-tab="custom-tab">⚙️ 自訂參數</button>
         </div>
 
-        <!-- Tab 1: 模板選擇模式 -->
+        <!-- Tab 1: 模板選擇 -->
         <div id="template-tab" class="tab-content active">
-            <!-- 上傳區域 -->
-            <div class="upload-section">
+            <div class="card">
+                <h3>1. 上傳你的照片</h3>
                 <div class="upload-area" id="uploadAreaTemplate">
-                    <div class="upload-icon">📸</div>
-                    <div class="upload-text">點擊選擇圖片或拖曳圖片到此處</div>
-                    <div class="upload-text info-text">支援 JPG、PNG 格式</div>
+                    <div class="upload-icon">🖼️</div>
+                    <div class="upload-text">點擊或拖曳圖片到此處</div>
+                    <div class="upload-info">支援 JPG, PNG 格式</div>
                 </div>
                 <input type="file" id="fileInputTemplate" class="file-input" accept="image/*">
-                <img id="previewImageTemplate" class="preview-image" alt="預覽圖片">
+                <div class="image-preview-container" id="previewContainerTemplate"></div>
             </div>
 
-            <!-- 模板選擇區域 -->
-            <div class="template-selector">
-                <h3 style="color: #333; margin-bottom: 10px;">選擇風格模板</h3>
-                <div class="template-loading" id="templateLoading">載入模板中...</div>
+            <div class="card">
+                <h3>2. 選擇風格模板</h3>
+                <div id="templateLoading">載入模板中...</div>
                 <div class="template-grid" id="templateGrid"></div>
             </div>
 
-            <!-- 生成按鈕 -->
-            <button class="generate-btn" id="generateBtnTemplate" disabled>
-                選擇圖片後開始生成
-            </button>
-
-            <!-- 錯誤訊息 -->
-            <div class="error-message" id="errorMessageTemplate"></div>
-
-            <!-- 成功訊息 -->
-            <div class="success-message" id="successMessageTemplate"></div>
-
-            <!-- 結果區域 -->
+            <button class="btn btn-primary" id="generateBtnTemplate" disabled>請先上傳圖片</button>
+            <div class="message error-message" id="errorMessageTemplate"></div>
             <div class="result-section" id="resultSectionTemplate">
-                <div class="loading" id="loadingAreaTemplate">
+                <div class="loading" style="display: none;">
                     <div class="spinner"></div>
-                    <div class="loading-text">正在生成圖片，請稍候...</div>
+                    <div class="loading-text">正在生成中，請稍候...</div>
                 </div>
+                <div class="message success-message" id="successMessageTemplate"></div>
                 <div class="result-images" id="resultImagesTemplate"></div>
             </div>
         </div>
 
-        <!-- Tab 2: 自訂參數模式 -->
+        <!-- Tab 2: 自訂參數 -->
         <div id="custom-tab" class="tab-content">
-            <!-- 上傳區域 -->
-            <div class="upload-section">
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📸</div>
-                <div class="upload-text">點擊選擇圖片或拖曳圖片到此處</div>
-                <div class="upload-text info-text">支援 JPG、PNG 格式</div>
-            </div>
-            <input type="file" id="fileInput" class="file-input" accept="image/*">
-            <img id="previewImage" class="preview-image" alt="預覽圖片">
-        </div>
-
-        <!-- 參數設定區域 -->
-        <div class="params-section">
-            <button class="params-toggle" id="paramsToggle">⚙️ 進階設定（選填）</button>
-            <div class="params-inputs" id="paramsInputs">
-                <div class="input-group">
-                    <label for="appId">App ID</label>
-                    <input type="text" id="appId" placeholder="1920079111241039873">
-                    <div class="info-text">留空使用預設值</div>
+            <div class="card">
+                <h3>1. 上傳你的照片</h3>
+                <div class="upload-area" id="uploadAreaCustom">
+                    <div class="upload-icon">🖼️</div>
+                    <div class="upload-text">點擊或拖曳圖片到此處</div>
+                    <div class="upload-info">支援 JPG, PNG 格式</div>
                 </div>
-                <div class="input-group">
-                    <label for="versionId">Version ID</label>
-                    <input type="text" id="versionId" placeholder="1920079111245234177">
-                    <div class="info-text">留空使用預設值</div>
-                </div>
-                <div class="input-group">
-                    <label for="cnetFormId">ControlNet Form ID</label>
-                    <input type="text" id="cnetFormId" placeholder="17466175263110005">
-                    <div class="info-text">留空使用預設值</div>
-                </div>
-                <div class="warning-message" id="paramsWarning"></div>
+                <input type="file" id="fileInputCustom" class="file-input" accept="image/*">
+                <div class="image-preview-container" id="previewContainerCustom"></div>
             </div>
-        </div>
 
-        <!-- 生成按鈕 -->
-        <button class="generate-btn" id="generateBtn" disabled>
-            選擇圖片後開始生成
-        </button>
-
-        <!-- 錯誤訊息 -->
-        <div class="error-message" id="errorMessage"></div>
-
-        <!-- 成功訊息 -->
-        <div class="success-message" id="successMessage"></div>
-
-        <!-- 結果區域 -->
-        <div class="result-section" id="resultSection">
-            <div class="loading" id="loadingArea">
-                <div class="spinner"></div>
-                <div class="loading-text">正在生成圖片，請稍候...</div>
+            <div class="card">
+                <h3>2. 輸入自訂參數 (選填)</h3>
+                <button class="btn btn-secondary" id="paramsToggleCustom">顯示進階設定</button>
+                <div id="customParamsInputs" class="custom-params-inputs-container">
+                    <div class="input-group">
+                        <label for="appId">App ID</label>
+                        <input type="text" id="appId" placeholder="留空使用預設值">
+                    </div>
+                    <div class="input-group">
+                        <label for="versionId">Version ID</label>
+                        <input type="text" id="versionId" placeholder="留空使用預設值">
+                    </div>
+                    <div class="input-group">
+                        <label for="cnetFormId">ControlNet Form ID</label>
+                        <input type="text" id="cnetFormId" placeholder="留空使用預設值">
+                    </div>
+                </div>
             </div>
-            <div class="result-images" id="resultImages"></div>
+
+            <button class="btn btn-primary" id="generateBtnCustom" disabled>請先上傳圖片</button>
+            <div class="message error-message" id="errorMessageCustom"></div>
+            <div class="result-section" id="resultSectionCustom">
+                <div class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <div class="loading-text">正在生成中，請稍候...</div>
+                </div>
+                <div class="message success-message" id="successMessageCustom"></div>
+                <div class="result-images" id="resultImagesCustom"></div>
+            </div>
         </div>
     </div>
 
-    <script>
-        // DOM 元素
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const previewImage = document.getElementById('previewImage');
-        const paramsToggle = document.getElementById('paramsToggle');
-        const paramsInputs = document.getElementById('paramsInputs');
-        const generateBtn = document.getElementById('generateBtn');
-        const resultSection = document.getElementById('resultSection');
-        const loadingArea = document.getElementById('loadingArea');
-        const resultImages = document.getElementById('resultImages');
-        const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
-        const paramsWarning = document.getElementById('paramsWarning');
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // ---通用功能---
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
 
-        // 參數輸入
-        const appIdInput = document.getElementById('appId');
-        const versionIdInput = document.getElementById('versionId');
-        const cnetFormIdInput = document.getElementById('cnetFormId');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabId = button.getAttribute('data-tab');
+            
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
 
-        let selectedFile = null;
+            button.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
 
-        // 驗證參數：三個參數要麼都填，要麼都不填
-        function validateParams() {
-            const appId = appIdInput.value.trim();
-            const versionId = versionIdInput.value.trim();
-            const cnetFormId = cnetFormIdInput.value.trim();
-
-            const filledCount = [appId, versionId, cnetFormId].filter(v => v !== '').length;
-
-            // 全部填寫或全部不填是有效的
-            if (filledCount === 0 || filledCount === 3) {
-                // 清除警告
-                paramsWarning.classList.remove('show');
-                appIdInput.classList.remove('invalid');
-                versionIdInput.classList.remove('invalid');
-                cnetFormIdInput.classList.remove('invalid');
-                return true;
-            } else {
-                // 部分填寫，顯示警告
-                paramsWarning.textContent = '⚠️ 請填寫全部三個參數，或全部留空使用預設值';
-                paramsWarning.classList.add('show');
-
-                // 標記未填寫的欄位
-                if (!appId) appIdInput.classList.add('invalid');
-                else appIdInput.classList.remove('invalid');
-
-                if (!versionId) versionIdInput.classList.add('invalid');
-                else versionIdInput.classList.remove('invalid');
-
-                if (!cnetFormId) cnetFormIdInput.classList.add('invalid');
-                else cnetFormIdInput.classList.remove('invalid');
-
-                return false;
-            }
-        }
-
-        // 更新生成按鈕狀態
-        function updateGenerateButton() {
-            const paramsValid = validateParams();
-            const hasFile = selectedFile !== null;
-
-            if (hasFile && paramsValid) {
-                generateBtn.disabled = false;
-                generateBtn.textContent = '🎨 開始生成圖片';
-            } else if (!hasFile) {
-                generateBtn.disabled = true;
-                generateBtn.textContent = '選擇圖片後開始生成';
-            } else if (!paramsValid) {
-                generateBtn.disabled = true;
-                generateBtn.textContent = '請正確填寫參數';
-            }
-        }
-
-        // 監聽參數輸入變化
-        appIdInput.addEventListener('input', updateGenerateButton);
-        versionIdInput.addEventListener('input', updateGenerateButton);
-        cnetFormIdInput.addEventListener('input', updateGenerateButton);
-
-        // 切換參數設定
-        paramsToggle.addEventListener('click', () => {
-            paramsInputs.classList.toggle('show');
+    const setupUploadArea = (uploadArea, fileInput, previewContainer, onFileSelect) => {
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, e => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
         });
 
-        // 點擊上傳區域
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'));
         });
 
-        // 檔案選擇
-        fileInput.addEventListener('change', (e) => {
-            handleFile(e.target.files[0]);
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'));
         });
 
-        // 拖曳上傳
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
+        uploadArea.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
 
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            handleFile(e.dataTransfer.files[0]);
-        });
-
-        // 處理檔案
-        function handleFile(file) {
-            if (!file) return;
-
-            if (!file.type.startsWith('image/')) {
-                showError('請選擇圖片檔案');
+        const handleFile = (file) => {
+            if (!file || !file.type.startsWith('image/')) {
+                onFileSelect(null, '請選擇有效的圖片檔案');
                 return;
             }
-
-            selectedFile = file;
-
-            // 預覽圖片
+            
             const reader = new FileReader();
-            reader.onload = (e) => {
-                previewImage.src = e.target.result;
-                previewImage.classList.add('show');
+            reader.onload = e => {
+                previewContainer.innerHTML = `<img src="${e.target.result}" alt="Preview" class="preview-image">`;
             };
             reader.readAsDataURL(file);
+            onFileSelect(file, null);
+        };
+    };
 
-            // 更新生成按鈕狀態（會檢查參數是否正確）
-            updateGenerateButton();
+    const pollStatus = async (taskId, ui) => {
+        const pollInterval = 2000;
+        try {
+            const response = await fetch(`/status/${taskId}`);
+            if (!response.ok) throw new Error('查詢狀態失敗');
+            const data = await response.json();
 
-            hideError();
-            hideSuccess();
+            if (data.state === 10) { // COMPLETED
+                ui.hideLoading();
+                ui.displayResults(data.images);
+                ui.showSuccess('圖片生成成功！');
+                ui.enableButton();
+            } else if (data.state === 20) { // FAILED
+                throw new Error(data.error_message || '圖片生成失敗');
+            } else { // PROCESSING
+                setTimeout(() => pollStatus(taskId, ui), pollInterval);
+            }
+        } catch (error) {
+            ui.hideLoading();
+            ui.showError(error.message);
+            ui.enableButton();
         }
+    };
+    
+    const downloadImage = (url, filename) => {
+        fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename || 'generated-image.jpg';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            })
+            .catch(error => console.error('Download failed:', error));
+    };
 
-        // 生成圖片
-        generateBtn.addEventListener('click', async () => {
-            if (!selectedFile) {
-                showError('請先選擇圖片');
-                return;
-            }
-
-            // 驗證參數
-            if (!validateParams()) {
-                showError('請正確填寫參數：三個參數要麼都填寫，要麼都留空');
-                return;
-            }
-
-            // 準備表單資料
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-
-            // 添加參數（如果有填寫）
-            if (appIdInput.value.trim()) {
-                formData.append('app_id', appIdInput.value.trim());
-            }
-            if (versionIdInput.value.trim()) {
-                formData.append('version_id', versionIdInput.value.trim());
-            }
-            if (cnetFormIdInput.value.trim()) {
-                formData.append('cnet_form_id', cnetFormIdInput.value.trim());
-            }
-
-            // 固定生成張數為 1
-            formData.append('generate_num', '1');
-
-            // 禁用按鈕
-            generateBtn.disabled = true;
-            generateBtn.textContent = '生成中...';
-
-            // 顯示載入區域
-            resultSection.classList.add('show');
-            loadingArea.style.display = 'block';
-            resultImages.innerHTML = '';
-
-            hideError();
-            hideSuccess();
-
-            try {
-                // 呼叫 /create API
-                const response = await fetch('/create', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || '創建任務失敗');
-                }
-
-                const data = await response.json();
-                const taskId = data.task_id;
-
-                // 開始輪詢狀態
-                pollStatus(taskId);
-
-            } catch (error) {
-                console.error('Error:', error);
-                showError(error.message);
-                generateBtn.disabled = false;
-                generateBtn.textContent = '🎨 開始生成圖片';
-                loadingArea.style.display = 'none';
-            }
-        });
-
-        // 輪詢任務狀態
-        async function pollStatus(taskId) {
-            const pollInterval = 2000; // 2秒輪詢一次
-
-            const poll = async () => {
-                try {
-                    const response = await fetch(`/status/${taskId}`);
-
-                    if (!response.ok) {
-                        throw new Error('查詢狀態失敗');
-                    }
-
-                    const data = await response.json();
-
-                    if (data.state === 10) { // COMPLETED
-                        // 任務完成
-                        loadingArea.style.display = 'none';
-                        displayResults(data.images);
-                        showSuccess('圖片生成成功！');
-                        generateBtn.disabled = false;
-                        generateBtn.textContent = '🎨 重新生成圖片';
-                    } else if (data.state === 20) { // FAILED
-                        // 任務失敗
-                        throw new Error('圖片生成失敗');
-                    } else if (data.state === 30) { // PROCESSING
-                        // 繼續輪詢
-                        setTimeout(poll, pollInterval);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    showError(error.message);
-                    loadingArea.style.display = 'none';
-                    generateBtn.disabled = false;
-                    generateBtn.textContent = '🎨 重新生成圖片';
-                }
-            };
-
-            poll();
-        }
-
-        // 顯示結果圖片
-        function displayResults(images) {
-            if (!images || images.length === 0) {
-                showError('未獲取到生成的圖片');
-                return;
-            }
-
-            console.log('收到的圖片數據:', images);
-
-            resultImages.innerHTML = '';
-
-            images.forEach((image, index) => {
-                // 判斷 image 是字符串還是對象
-                let imageUrl;
-                if (typeof image === 'string') {
-                    // 如果 image 本身就是字符串 URL
-                    imageUrl = image;
-                } else if (typeof image === 'object') {
-                    // 如果是對象，嘗試多種可能的字段名稱
-                    imageUrl = image.url || image.imageUrl || image.image_url || image.src;
-                }
-
-                if (!imageUrl) {
-                    console.error('圖片數據中找不到 URL:', image);
-                    showError(`第 ${index + 1} 張圖片缺少 URL`);
+    // ---模板模式 (Template Mode)---
+    (() => {
+        const ui = {
+            uploadArea: document.getElementById('uploadAreaTemplate'),
+            fileInput: document.getElementById('fileInputTemplate'),
+            previewContainer: document.getElementById('previewContainerTemplate'),
+            templateGrid: document.getElementById('templateGrid'),
+            templateLoading: document.getElementById('templateLoading'),
+            generateBtn: document.getElementById('generateBtnTemplate'),
+            errorMessage: document.getElementById('errorMessageTemplate'),
+            successMessage: document.getElementById('successMessageTemplate'),
+            resultSection: document.getElementById('resultSectionTemplate'),
+            loadingArea: document.querySelector('#resultSectionTemplate .loading'),
+            resultImages: document.getElementById('resultImagesTemplate'),
+            
+            showError: (msg) => { ui.errorMessage.textContent = `❌ ${msg}`; ui.errorMessage.classList.add('show'); },
+            hideError: () => ui.errorMessage.classList.remove('show'),
+            showSuccess: (msg) => { ui.successMessage.textContent = `✅ ${msg}`; ui.successMessage.classList.add('show'); },
+            hideSuccess: () => ui.successMessage.classList.remove('show'),
+            showLoading: () => { ui.resultSection.style.display = 'block'; ui.loadingArea.style.display = 'flex'; ui.resultImages.innerHTML = ''; },
+            hideLoading: () => ui.loadingArea.style.display = 'none',
+            disableButton: (text) => { ui.generateBtn.disabled = true; ui.generateBtn.textContent = text; },
+            enableButton: () => { ui.generateBtn.disabled = false; ui.generateBtn.textContent = '重新生成'; },
+            updateButtonOnFile: () => { ui.generateBtn.disabled = false; ui.generateBtn.textContent = '點擊開始生成'; },
+            displayResults: (images) => {
+                ui.resultImages.innerHTML = '';
+                if (!images || images.length === 0) {
+                    ui.showError('未獲取到生成的圖片');
                     return;
                 }
+                images.forEach((image, i) => {
+                    const imgUrl = image.url || image;
+                    const container = document.createElement('div');
+                    container.className = 'result-image-container';
+                    container.innerHTML = `
+                        <img src="${imgUrl}" alt="Generated Image ${i + 1}" class="result-image">
+                        <button class="download-btn">下載</button>
+                    `;
+                    container.querySelector('.download-btn').onclick = () => downloadImage(imgUrl, `template_generated_${i + 1}.jpg`);
+                    ui.resultImages.appendChild(container);
+                });
+            }
+        };
 
-                console.log(`圖片 ${index + 1} URL:`, imageUrl);
+        let selectedFile = null;
+        let selectedTemplateId = null;
 
-                const container = document.createElement('div');
-                container.className = 'result-image-container';
+        const onFileSelect = (file, error) => {
+            ui.hideError();
+            if (error) {
+                ui.showError(error);
+                selectedFile = null;
+                ui.disableButton('請先上傳圖片');
+                return;
+            }
+            selectedFile = file;
+            ui.updateButtonOnFile();
+        };
 
-                const img = document.createElement('img');
-                img.src = imageUrl;
-                img.className = 'result-image';
-                img.alt = `生成的圖片 ${index + 1}`;
-
-                // 添加圖片載入錯誤處理
-                img.onerror = () => {
-                    console.error('圖片載入失敗:', imageUrl);
-                    showError(`圖片 ${index + 1} 載入失敗`);
-                };
-
-                const downloadBtn = document.createElement('button');
-                downloadBtn.className = 'download-btn';
-                downloadBtn.textContent = '⬇ 下載';
-                downloadBtn.onclick = () => downloadImage(imageUrl, `generated_${index + 1}.jpg`);
-
-                container.appendChild(img);
-                container.appendChild(downloadBtn);
-                resultImages.appendChild(container);
-            });
-        }
-
-        // 下載圖片
-        function downloadImage(url, filename) {
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.target = '_blank';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
-        // 顯示錯誤訊息
-        function showError(message) {
-            errorMessage.textContent = '❌ ' + message;
-            errorMessage.classList.add('show');
-        }
-
-        // 隱藏錯誤訊息
-        function hideError() {
-            errorMessage.classList.remove('show');
-        }
-
-        // 顯示成功訊息
-        function showSuccess(message) {
-            successMessage.textContent = '✅ ' + message;
-            successMessage.classList.add('show');
-        }
-
-        // 隱藏成功訊息
-        function hideSuccess() {
-            successMessage.classList.remove('show');
-        }
-
-        // ========== Tab 切換功能 ==========
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // 移除所有active class
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                tabContents.forEach(content => content.classList.remove('active'));
-
-                // 添加active class到點擊的button和對應的content
-                button.classList.add('active');
-                const tabId = button.getAttribute('data-tab');
-                document.getElementById(tabId).classList.add('active');
-            });
-        });
-
-        // ========== 模板選擇模式功能 ==========
-        const uploadAreaTemplate = document.getElementById('uploadAreaTemplate');
-        const fileInputTemplate = document.getElementById('fileInputTemplate');
-        const previewImageTemplate = document.getElementById('previewImageTemplate');
-        const generateBtnTemplate = document.getElementById('generateBtnTemplate');
-        const templateGrid = document.getElementById('templateGrid');
-        const templateLoading = document.getElementById('templateLoading');
-        const errorMessageTemplate = document.getElementById('errorMessageTemplate');
-        const successMessageTemplate = document.getElementById('successMessageTemplate');
-        const resultSectionTemplate = document.getElementById('resultSectionTemplate');
-        const loadingAreaTemplate = document.getElementById('loadingAreaTemplate');
-        const resultImagesTemplate = document.getElementById('resultImagesTemplate');
-
-        let selectedFileTemplate = null;
-        let selectedTemplateId = 0;
-        let templates = [];
-
-        // 載入模板列表
-        async function loadTemplates() {
+        setupUploadArea(ui.uploadArea, ui.fileInput, ui.previewContainer, onFileSelect);
+        
+        const loadTemplates = async () => {
             try {
                 const response = await fetch('/templates');
                 const data = await response.json();
-
-                if (data.status === 'success') {
-                    templates = data.templates;
-                    displayTemplates(templates);
-                    templateLoading.style.display = 'none';
-                } else {
-                    throw new Error('載入模板失敗');
-                }
-            } catch (error) {
-                console.error('Error loading templates:', error);
-                templateLoading.textContent = '❌ 載入模板失敗';
-            }
-        }
-
-        // 顯示模板列表
-        function displayTemplates(templateList) {
-            templateGrid.innerHTML = '';
-            templateList.forEach((template, index) => {
-                const card = document.createElement('div');
-                card.className = 'template-card';
-                if (index === 0) {
-                    card.classList.add('selected');
-                    selectedTemplateId = template.template_id;
-                }
-
-                card.innerHTML = `
-                    ${template.template_image ? `<img src="${template.template_image}" class="template-card-image" alt="${template.name}">` : ''}
-                    <div class="template-card-id">ID: ${template.template_id}</div>
-                    <div class="template-card-name">${template.name}</div>
-                `;
-
-                card.addEventListener('click', () => {
-                    // 移除所有selected class
-                    document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    selectedTemplateId = template.template_id;
-                    console.log('選擇了模板:', template.name, '(ID:', template.template_id, ')');
+                if (data.status !== 'success') throw new Error('載入模板失敗');
+                
+                ui.templateGrid.innerHTML = '';
+                data.templates.forEach((template, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'template-card';
+                    card.dataset.id = template.template_id;
+                    card.innerHTML = `
+                        <img src="${template.template_image || 'https://via.placeholder.com/150x200.png?text=No+Image'}" class="template-card-image" alt="${template.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/150x200.png?text=Error';">
+                        <div class="template-card-name">${template.name}</div>
+                    `;
+                    card.addEventListener('click', () => {
+                        document.querySelectorAll('.template-card.selected').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                        selectedTemplateId = template.template_id;
+                    });
+                    if (index === 0) {
+                        card.classList.add('selected');
+                        selectedTemplateId = template.template_id;
+                    }
+                    ui.templateGrid.appendChild(card);
                 });
+                ui.templateLoading.style.display = 'none';
 
-                templateGrid.appendChild(card);
-            });
-        }
-
-        // 頁面載入時載入模板
-        loadTemplates();
-
-        // 模板Tab - 點擊上傳區域
-        uploadAreaTemplate.addEventListener('click', () => {
-            fileInputTemplate.click();
-        });
-
-        // 模板Tab - 檔案選擇
-        fileInputTemplate.addEventListener('change', (e) => {
-            handleFileTemplate(e.target.files[0]);
-        });
-
-        // 模板Tab - 拖曳上傳
-        uploadAreaTemplate.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadAreaTemplate.classList.add('dragover');
-        });
-
-        uploadAreaTemplate.addEventListener('dragleave', () => {
-            uploadAreaTemplate.classList.remove('dragover');
-        });
-
-        uploadAreaTemplate.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadAreaTemplate.classList.remove('dragover');
-            handleFileTemplate(e.dataTransfer.files[0]);
-        });
-
-        // 模板Tab - 處理檔案
-        function handleFileTemplate(file) {
-            if (!file) return;
-
-            if (!file.type.startsWith('image/')) {
-                showErrorTemplate('請選擇圖片檔案');
-                return;
+            } catch (error) {
+                ui.templateLoading.textContent = `❌ ${error.message}`;
             }
+        };
 
-            selectedFileTemplate = file;
+        ui.generateBtn.addEventListener('click', async () => {
+            if (!selectedFile) { ui.showError('請先上傳圖片'); return; }
+            if (selectedTemplateId === null) { ui.showError('請選擇一個風格模板'); return; }
 
-            // 預覽圖片
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                previewImageTemplate.src = e.target.result;
-                previewImageTemplate.classList.add('show');
-            };
-            reader.readAsDataURL(file);
+            ui.hideError();
+            ui.hideSuccess();
+            ui.showLoading();
+            ui.disableButton('生成中...');
 
-            // 啟用生成按鈕
-            generateBtnTemplate.disabled = false;
-            generateBtnTemplate.textContent = '🎨 開始生成圖片';
-
-            hideErrorTemplate();
-            hideSuccessTemplate();
-        }
-
-        // 模板Tab - 生成圖片
-        generateBtnTemplate.addEventListener('click', async () => {
-            if (!selectedFileTemplate) {
-                showErrorTemplate('請先選擇圖片');
-                return;
-            }
-
-            // 準備表單資料
             const formData = new FormData();
-            formData.append('file', selectedFileTemplate);
+            formData.append('file', selectedFile);
             formData.append('template_id', selectedTemplateId);
 
-            // 禁用按鈕
-            generateBtnTemplate.disabled = true;
-            generateBtnTemplate.textContent = '生成中...';
-
-            // 顯示載入區域
-            resultSectionTemplate.classList.add('show');
-            loadingAreaTemplate.style.display = 'block';
-            resultImagesTemplate.innerHTML = '';
-
-            hideErrorTemplate();
-            hideSuccessTemplate();
-
             try {
-                // 呼叫 /generate API
-                const response = await fetch('/generate', {
-                    method: 'POST',
-                    body: formData
-                });
-
+                const response = await fetch('/generate', { method: 'POST', body: formData });
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || '創建任務失敗');
+                    const errData = await response.json();
+                    throw new Error(errData.detail || '創建任務失敗');
                 }
-
                 const data = await response.json();
-                const taskId = data.task_id;
-                const templateName = data.template_name || '模板 ' + selectedTemplateId;
-
-                console.log('使用模板:', templateName, '創建任務:', taskId);
-
-                // 開始輪詢狀態
-                pollStatusTemplate(taskId);
-
+                pollStatus(data.task_id, ui);
             } catch (error) {
-                console.error('Error:', error);
-                showErrorTemplate(error.message);
-                generateBtnTemplate.disabled = false;
-                generateBtnTemplate.textContent = '🎨 開始生成圖片';
-                loadingAreaTemplate.style.display = 'none';
+                ui.hideLoading();
+                ui.showError(error.message);
+                ui.enableButton();
             }
         });
 
-        // 模板Tab - 輪詢任務狀態
-        async function pollStatusTemplate(taskId) {
-            const pollInterval = 2000;
+        loadTemplates();
+    })();
 
-            const poll = async () => {
-                try {
-                    const response = await fetch(`/status/${taskId}`);
+    // ---自訂參數模式 (Custom Mode)---
+    (() => {
+        const ui = {
+            uploadArea: document.getElementById('uploadAreaCustom'),
+            fileInput: document.getElementById('fileInputCustom'),
+            previewContainer: document.getElementById('previewContainerCustom'),
+            generateBtn: document.getElementById('generateBtnCustom'),
+            errorMessage: document.getElementById('errorMessageCustom'),
+            successMessage: document.getElementById('successMessageCustom'),
+            resultSection: document.getElementById('resultSectionCustom'),
+            loadingArea: document.querySelector('#resultSectionCustom .loading'),
+            resultImages: document.getElementById('resultImagesCustom'),
 
-                    if (!response.ok) {
-                        throw new Error('查詢狀態失敗');
-                    }
-
-                    const data = await response.json();
-
-                    if (data.state === 10) { // COMPLETED
-                        loadingAreaTemplate.style.display = 'none';
-                        displayResultsTemplate(data.images);
-                        showSuccessTemplate('圖片生成成功！');
-                        generateBtnTemplate.disabled = false;
-                        generateBtnTemplate.textContent = '🎨 重新生成圖片';
-                    } else if (data.state === 20) { // FAILED
-                        throw new Error('圖片生成失敗');
-                    } else if (data.state === 30) { // PROCESSING
-                        setTimeout(poll, pollInterval);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    showErrorTemplate(error.message);
-                    loadingAreaTemplate.style.display = 'none';
-                    generateBtnTemplate.disabled = false;
-                    generateBtnTemplate.textContent = '🎨 重新生成圖片';
-                }
-            };
-
-            poll();
-        }
-
-        // 模板Tab - 顯示結果圖片
-        function displayResultsTemplate(images) {
-            if (!images || images.length === 0) {
-                showErrorTemplate('未獲取到生成的圖片');
-                return;
-            }
-
-            console.log('收到的圖片數據:', images);
-            resultImagesTemplate.innerHTML = '';
-
-            images.forEach((image, index) => {
-                let imageUrl;
-                if (typeof image === 'string') {
-                    imageUrl = image;
-                } else if (typeof image === 'object') {
-                    imageUrl = image.url || image.imageUrl || image.image_url || image.src;
-                }
-
-                if (!imageUrl) {
-                    console.error('圖片數據中找不到 URL:', image);
-                    showErrorTemplate(`第 ${index + 1} 張圖片缺少 URL`);
+            showError: (msg) => { ui.errorMessage.textContent = `❌ ${msg}`; ui.errorMessage.classList.add('show'); },
+            hideError: () => ui.errorMessage.classList.remove('show'),
+            showSuccess: (msg) => { ui.successMessage.textContent = `✅ ${msg}`; ui.successMessage.classList.add('show'); },
+            hideSuccess: () => ui.successMessage.classList.remove('show'),
+            showLoading: () => { ui.resultSection.style.display = 'block'; ui.loadingArea.style.display = 'flex'; ui.resultImages.innerHTML = ''; },
+            hideLoading: () => ui.loadingArea.style.display = 'none',
+            disableButton: (text) => { ui.generateBtn.disabled = true; ui.generateBtn.textContent = text; },
+            enableButton: () => { ui.generateBtn.disabled = false; ui.generateBtn.textContent = '重新生成'; },
+            updateButtonOnFile: () => { ui.generateBtn.disabled = false; ui.generateBtn.textContent = '點擊開始生成'; },
+            displayResults: (images) => {
+                ui.resultImages.innerHTML = '';
+                if (!images || images.length === 0) {
+                    ui.showError('未獲取到生成的圖片');
                     return;
                 }
+                images.forEach((image, i) => {
+                    const imgUrl = image.url || image;
+                    const container = document.createElement('div');
+                    container.className = 'result-image-container';
+                    container.innerHTML = `
+                        <img src="${imgUrl}" alt="Generated Image ${i + 1}" class="result-image">
+                        <button class="download-btn">下載</button>
+                    `;
+                    container.querySelector('.download-btn').onclick = () => downloadImage(imgUrl, `custom_generated_${i + 1}.jpg`);
+                    ui.resultImages.appendChild(container);
+                });
+            }
+        };
 
-                console.log(`圖片 ${index + 1} URL:`, imageUrl);
+        const appIdInput = document.getElementById('appId');
+        const versionIdInput = document.getElementById('versionId');
+        const cnetFormIdInput = document.getElementById('cnetFormId');
+        const paramsToggleCustom = document.getElementById('paramsToggleCustom');
+        const customParamsInputs = document.getElementById('customParamsInputs');
 
-                const container = document.createElement('div');
-                container.className = 'result-image-container';
+        let selectedFile = null;
+        let customParamsVisible = false; // Track visibility state
 
-                const img = document.createElement('img');
-                img.src = imageUrl;
-                img.className = 'result-image';
-                img.alt = `生成的圖片 ${index + 1}`;
+        paramsToggleCustom.addEventListener('click', () => {
+            customParamsVisible = !customParamsVisible;
+            customParamsInputs.style.display = customParamsVisible ? 'block' : 'none';
+            paramsToggleCustom.textContent = customParamsVisible ? '隱藏進階設定' : '顯示進階設定';
+        });
+        
+        const onFileSelect = (file, error) => {
+            ui.hideError();
+            if (error) {
+                ui.showError(error);
+                selectedFile = null;
+                ui.disableButton('請先上傳圖片');
+                return;
+            }
+            selectedFile = file;
+            ui.updateButtonOnFile();
+        };
+        
+        setupUploadArea(ui.uploadArea, ui.fileInput, ui.previewContainer, onFileSelect);
+        
+        ui.generateBtn.addEventListener('click', async () => {
+            if (!selectedFile) { ui.showError('請先上傳圖片'); return; }
 
-                img.onerror = () => {
-                    console.error('圖片載入失敗:', imageUrl);
-                    showErrorTemplate(`圖片 ${index + 1} 載入失敗`);
-                };
+            ui.hideError();
+            ui.hideSuccess();
+            ui.showLoading();
+            ui.disableButton('生成中...');
 
-                const downloadBtn = document.createElement('button');
-                downloadBtn.className = 'download-btn';
-                downloadBtn.textContent = '⬇ 下載';
-                downloadBtn.onclick = () => downloadImage(imageUrl, `generated_${index + 1}.jpg`);
+            const formData = new FormData();
+            formData.append('file', selectedFile);
 
-                container.appendChild(img);
-                container.appendChild(downloadBtn);
-                resultImagesTemplate.appendChild(container);
-            });
-        }
+            const appId = appIdInput.value.trim();
+            const versionId = versionIdInput.value.trim();
+            const cnetFormId = cnetFormIdInput.value.trim();
+            
+            if (appId) formData.append('app_id', appId);
+            if (versionId) formData.append('version_id', versionId);
+            if (cnetFormId) formData.append('cnet_form_id', cnetFormId);
 
-        // 模板Tab - 顯示/隱藏訊息
-        function showErrorTemplate(message) {
-            errorMessageTemplate.textContent = '❌ ' + message;
-            errorMessageTemplate.classList.add('show');
-        }
+            try {
+                const response = await fetch('/create', { method: 'POST', body: formData });
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.detail || '創建任務失敗');
+                }
+                const data = await response.json();
+                pollStatus(data.task_id, ui);
+            } catch (error) {
+                ui.hideLoading();
+                ui.showError(error.message);
+                ui.enableButton();
+            }
+        });
+    })();
+});
+</script>
 
-        function hideErrorTemplate() {
-            errorMessageTemplate.classList.remove('show');
-        }
-
-        function showSuccessTemplate(message) {
-            successMessageTemplate.textContent = '✅ ' + message;
-            successMessageTemplate.classList.add('show');
-        }
-
-        function hideSuccessTemplate() {
-            successMessageTemplate.classList.remove('show');
-        }
-    </script>
-</div> <!-- 關閉 custom-tab -->
-</div> <!-- 關閉 container -->
 </body>
 </html>

@@ -2,6 +2,7 @@
 app_db.py
 app_old.py
 app_split2.py
+static/index2.html
 docker-compose-db.yaml
 templates.json
 .claude
@@ -9,6 +10,10 @@ templates.json
 # input 資料夾保留，但內部檔案不上傳
 input/*
 !input/.gitkeep
+
+# output 資料夾保留，但內部檔案不上傳
+output/*
+!output/.gitkeep
 
 # logs 資料夾保留，但內部檔案不上傳
 logs/*
