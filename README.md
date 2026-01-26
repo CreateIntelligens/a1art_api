@@ -81,7 +81,7 @@ cp templates_sample.json templates.json
 python app.py
 ```
 
-服務將在 `http://localhost:1989` 啟動。
+服務將在 `http://localhost:1991` 啟動。
 
 ## API 使用說明
 
@@ -99,7 +99,7 @@ python app.py
 **請求範例**:
 
 ```bash
-curl -X POST "http://localhost:1989/create" \
+curl -X POST "http://localhost:1991/create" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@your_image.jpg" \
   -F "app_id=1912088126456299522" \
@@ -133,7 +133,7 @@ curl -X POST "http://localhost:1989/create" \
 **請求範例**:
 
 ```bash
-curl -X POST "http://localhost:1989/generate" \
+curl -X POST "http://localhost:1991/generate" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@your_image.jpg" \
   -F "template_id=0"
@@ -167,7 +167,7 @@ curl -X POST "http://localhost:1989/generate" \
 **請求範例**:
 
 ```bash
-curl "http://localhost:1989/templates"
+curl "http://localhost:1991/templates"
 ```
 
 **回應範例**:
@@ -195,7 +195,7 @@ curl "http://localhost:1989/templates"
 **請求範例**:
 
 ```bash
-curl "http://localhost:1989/status/task_12345678"
+curl "http://localhost:1991/status/task_12345678"
 ```
 
 **回應範例** (處理中):
@@ -313,7 +313,7 @@ python app.py
 本服務提供完整的 API 互動式文檔，方便開發和測試：
 
 #### Swagger UI（推薦）
-- **網址**: `http://localhost:1989/docs`
+- **網址**: `http://localhost:1991/docs`
 - **功能**:
   - 📖 查看所有 API 端點詳細說明
   - 🧪 直接在瀏覽器中測試 API
@@ -322,7 +322,7 @@ python app.py
   - 📊 查看資料模型結構
 
 #### ReDoc
-- **網址**: `http://localhost:1989/redoc`
+- **網址**: `http://localhost:1991/redoc`
 - **功能**:
   - 📚 美觀的 API 文檔閱讀介面
   - 🔍 搜尋功能

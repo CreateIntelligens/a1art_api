@@ -682,4 +682,4 @@ async def get_process_status(task_id: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=1989)
+    uvicorn.run(app, host="0.0.0.0", port=1991)
